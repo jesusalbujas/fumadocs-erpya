@@ -1,13 +1,14 @@
 import { docs } from 'collections/server';
 import { loader } from 'fumadocs-core/source';
-import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
 import { docsContentRoute, docsImageRoute, docsRoute } from './shared';
+import { z } from 'zod';
 
 // See https://fumadocs.dev/docs/headless/source-api for more info
 export const source = loader({
   baseUrl: docsRoute,
   source: docs.toFumadocsSource(),
-  plugins: [lucideIconsPlugin()],
+  // Eliminamos lucideIconsPlugin para evitar advertencias de iconos desconocidos
+  plugins: [],
 });
 
 export function getPageImage(page: (typeof source)['$inferPage']) {
