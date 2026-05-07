@@ -5,13 +5,14 @@ star: 9
 sticky: 9
 article: false
 author: Jesús Albujas
+role: docs_internal
 ---
 
 Keycloak es una plataforma de código abierto que proporciona servicios de gestión de identidades y accesos, facilitando la autenticación y autorización en aplicaciones y servicios. Su propósito es garantizar un acceso seguro y controlado a recursos digitales, ofreciendo una solución integral para la gestión de identidades, single sign-on (SSO) y la federación de identidades.
 
 **ERP Consultores y Asociados** ha decidido implementar Keycloak como parte de su infraestructura tecnológica para aprovechar los beneficios significativos que esta herramienta aporta a la gestión de identidades y accesos.
 
-Si tu servicio tiene habilitado autenticación en dos pasos haz [clic aquí](./login-2fa.md)
+Si tu servicio tiene habilitado autenticación en dos pasos haz [clic aquí](/docs/basic-rules/login-2fa/)
 
 ---
 
@@ -47,7 +48,7 @@ Donde usted debe descargar una de las aplicaciones sugeridas en su teléfono mó
 
 Una vez instalada la aplicación, escanee el código QR.
 
-Luego de haber escaneado este le dejará un código de 6 cifras. **Importante**: debe ingresar el código antes de que caduque, si observa en la aplicación instalada en su teléfono móvil para obtener el código o si usted instaló el complemento [**Authenticator**](./login-2fa.md) en su navegador , tiene temporizador, debe ingresar el código antes de que este caduque.
+Luego de haber escaneado este le dejará un código de 6 cifras. **Importante**: debe ingresar el código antes de que caduque, si observa en la aplicación instalada en su teléfono móvil para obtener el código o si usted instaló el complemento [**Authenticator**](/docs/basic-rules/login-2fa/) en su navegador , tiene temporizador, debe ingresar el código antes de que este caduque.
 
 Copie el código donde le indica **Keycloak**.
 

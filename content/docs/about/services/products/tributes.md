@@ -1,5 +1,6 @@
 ---
 title: Gestión de Tributos
+role: public
 category: Productos
 star: 9
 sticky: 9
@@ -43,12 +44,12 @@ Controla la relación de todas las retenciones de compra y ventas, así como los
 - Anticipos
 - Pago de intereses
 
-Para referencia de la funcionalidad se tiene un instructivo completo con todos los productos y paquetes [aquí](https://docs.erpya.com/docs/lve/procedures/withholding-management/)
+Para referencia de la funcionalidad se tiene un instructivo completo con todos los productos y paquetes [aquí](/docs/docs/lve/procedures/withholding-management/)
 
 ## Alcance del Servicio
 
 - Instalación de la aplicación
-- [Sesión general de capacitación sobre la aplicación incluído en la instalación](../learning/training-session.md)
-- [Sesión de 3 horas de capacitación para el manejo operativo](../learning/training-session.md)
-- [Sesión de 2 horas de capacitación para el manejo administrativo](../learning/training-session.md)
-- [Documentación](https://docs.erpya.com/docs/lve/procedures/withholding-management/)
+- [Sesión general de capacitación sobre la aplicación incluído en la instalación](/docs/about/services/learning/training-session)
+- [Sesión de 3 horas de capacitación para el manejo operativo](/docs/about/services/learning/training-session)
+- [Sesión de 2 horas de capacitación para el manejo administrativo](/docs/about/services/learning/training-session)
+- [Documentación](/docs/docs/lve/procedures/withholding-management/)

@@ -1,5 +1,6 @@
 ---
 title: Análisis de Desempeño o Contabilidad
+role: public
 category: Producto
 star: 9
 sticky: 9
@@ -37,4 +38,4 @@ Adempiere le permite generar diarios para: Alocaciones, Revalúos y Reconciliaci
 
 ## Paquetes Relacionados
 
-[Análisis de Cuentas](../packages/accounting-analysis.md)
+[Análisis de Cuentas](/docs/about/services/packages/accounting-analysis)

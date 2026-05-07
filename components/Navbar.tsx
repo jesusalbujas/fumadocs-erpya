@@ -62,8 +62,12 @@ import {
   FaCity,
   FaHandHoldingDollar,
   FaFlag,
-  FaCircleExclamation
+  FaCircleExclamation,
+  FaLaptopCode,
+  FaRightToBracket,
+  FaRightFromBracket
 } from 'react-icons/fa6';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 interface NavChild {
   text: string;
@@ -179,7 +183,7 @@ const navLinks: NavItem[] = [
         text: 'INICIO DE SESIÓN CON KEYCLOAK',
         children: [
           { text: 'Acceso Seguro con Keycloak', url: '/docs/basic-rules/login-keycloak', Icon: FaShieldHalved },
-          { text: 'Keycloak con Autenticación 2FA', url: '/docs/basic-rules/login-2fa', Icon: FaFingerprint },
+          { text: 'Keycloak con Autenticación 2FA', url: '/docs/b asic-rules/login-2fa', Icon: FaFingerprint },
         ]
       },
       {
@@ -236,30 +240,62 @@ const navLinks: NavItem[] = [
         text: 'BINARIOS',
         children: [
           { text: 'Docker', url: '/docs/downloads/docker', Icon: FaBoxArchive },
-          { text: 'Binarios', url: '/docs/downloads/binary', Icon: FaFileZipper },
+          { text: 'Descarga Binaria', url: '/docs/downloads/binary', Icon: FaFileZipper },
         ]
       },
       {
         text: 'ACTUALIZACIONES',
         children: [
-          { text: 'Actualizaciones', url: '/docs/downloads/updates', Icon: FaArrowsRotate },
-          { text: 'ADempiere 3.9.4', url: '/docs/downloads/updates/adempiere-3.9.4', Icon: FaNewspaper },
+          { text: 'Versiones de Aplicaciones', url: '/docs/downloads/updates', Icon: FaArrowsRotate },
+          { text: 'ADempiere 3.9.4', url: '/docs/downloads/updates/adempiere-3.9.4', Icon: FaLaptopCode },
+          { text: 'Rs-5.x', url: '/docs/downloads/updates/rs-5.x', Icon: FaLaptopCode },
+          { text: 'Rs-4.x', url: '/docs/downloads/updates/rs-4.x', Icon: FaLaptopCode },
+          { text: 'Rs-3.x', url: '/docs/downloads/updates/rs-3.x', Icon: FaLaptopCode },
+          { text: 'Rs-2.x', url: '/docs/downloads/updates/rs-2.x', Icon: FaLaptopCode },
+          { text: 'Rs-1.x', url: '/docs/downloads/updates/rs-1.x', Icon: FaLaptopCode },
+          { text: 'Dispositvos', url: '/docs/downloads/updates/devices', Icon: FaLaptopCode },
         ]
       }
     ]
   },
 ];
 
-export function Navbar() {
+
+export function Navbar({ publicPaths = [] }: { publicPaths?: string[] }) {
+  const { data: session } = useSession();
+  const userRoles = (session?.user as any)?.roles || [];
+  
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  
+  // Lógica para ocultar/mostrar navbar al hacer scroll
+  const [showNavbar, setShowNavbar] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    const controlNavbar = () => {
+      if (typeof window !== 'undefined') {
+        const currentScrollY = window.scrollY;
+        
+        // Solo mostrar si estamos cerca del tope (ej: menos de 100px)
+        if (currentScrollY < 100) {
+          setShowNavbar(true);
+        } else {
+          setShowNavbar(false);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', controlNavbar);
+    return () => {
+      window.removeEventListener('scroll', controlNavbar);
+    };
+  }, [lastScrollY]);
 
   const handleMouseEnter = (name: string) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -277,8 +313,57 @@ export function Navbar() {
     return pathname.startsWith(url);
   };
 
+  // Función para verificar acceso a un enlace basado en roles de Keycloak
+  const checkAccess = (url: string) => {
+    if (userRoles.includes('admin')) return true;
+    
+    // Si la ruta está en la lista de rutas públicas, permitimos el acceso
+    if (publicPaths.includes(url)) return true;
+
+    if (!url.startsWith('/docs')) return true;
+
+    const pathParts = url.split('/').filter(Boolean).slice(1);
+    const possibleRoles: string[] = ["docs"];
+    let currentPath = "docs";
+    for (const part of pathParts) {
+      currentPath += `:${part}`;
+      possibleRoles.push(currentPath);
+    }
+
+    return possibleRoles.some(role => userRoles.includes(role) || role === 'public');
+  };
+
+  // Filtrar los enlaces del Navbar
+  const filteredNavLinks = navLinks.map(link => {
+    // Si el link principal no tiene acceso, lo marcamos para eliminar
+    if (!checkAccess(link.url)) return null;
+
+    // Filtrar grupos si existen
+    if (link.groups) {
+      const filteredGroups = link.groups.map(group => {
+        const filteredChildren = group.children.filter(child => checkAccess(child.url));
+        if (filteredChildren.length === 0) return null;
+        return { ...group, children: filteredChildren };
+      }).filter(Boolean) as NavGroup[];
+
+      if (filteredGroups.length === 0) return null;
+      return { ...link, groups: filteredGroups };
+    }
+
+    // Filtrar hijos directos si existen
+    if (link.children) {
+      const filteredChildren = link.children.filter(child => checkAccess(child.url));
+      if (filteredChildren.length === 0) return null;
+      return { ...link, children: filteredChildren };
+    }
+
+    return link;
+  }).filter(Boolean) as NavItem[];
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[175] h-[60px] bg-[#0d1117]/90 backdrop-blur-[12px] backdrop-saturate-[150%] border-b border-fd-foreground/10 shadow-2xl transition-all duration-300 flex items-center px-4 md:px-8">
+    <nav className={`fixed top-0 left-0 right-0 z-[175] h-[60px] bg-[#0d1117]/90 backdrop-blur-[12px] backdrop-saturate-[150%] border-b border-fd-foreground/10 shadow-2xl transition-all duration-500 flex items-center px-4 md:px-8 ${
+      showNavbar ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+    }`}>
       {/* Logo Section */}
       <Link href="/" className="flex items-center gap-3 mr-8 group">
         <Image
@@ -287,14 +372,14 @@ export function Navbar() {
           width={36}
           height={36}
           priority
-          style={{ width: 'auto', height: '36px' }}
-          className="group-hover:scale-110 transition-transform duration-300"
+          style={{ width: 'auto', height: '28px' }}
+          className="group-hover:scale-110 transition-transform duration-300 h-[28px] w-auto block"
         />
       </Link>
 
-      {/* Navigation Links */}
-      <div className="hidden lg:flex items-center gap-1 h-full">
-        {navLinks.map((link) => {
+      {/* Navigation Links - CENTRADO ABSOLUTO */}
+      <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center gap-1 h-full">
+        {filteredNavLinks.map((link) => {
           const active = isLinkActive(link.url);
           
           return (
@@ -323,7 +408,7 @@ export function Navbar() {
 
               {/* Enhanced Dropdown Menu */}
               {(link.groups || link.children) && activeMenu === link.text && (
-                <div className="absolute top-[100%] left-0 min-w-[280px] max-h-[80vh] overflow-y-auto bg-fd-background/95 backdrop-blur-xl border border-fd-foreground/10 rounded-lg shadow-2xl py-2 animate-in fade-in slide-in-from-top-1 duration-200 custom-scrollbar">
+                <div className="absolute top-[100%] left-1/2 -translate-x-1/2 min-w-[280px] max-h-[80vh] overflow-y-auto bg-fd-background/95 backdrop-blur-xl border border-fd-foreground/10 rounded-lg shadow-2xl py-2 animate-in fade-in slide-in-from-top-1 duration-200 custom-scrollbar">
                   {link.groups ? (
                     link.groups.map((group, idx) => (
                       <div key={group.text} className={idx > 0 ? 'mt-4 pt-4 border-t border-fd-foreground/5' : ''}>
@@ -373,7 +458,7 @@ export function Navbar() {
       {/* Right Side Tools */}
       <div className="flex items-center gap-4">
         <button 
-          className="flex items-center gap-2 bg-white/5 border border-fd-foreground/10 rounded-full px-4 py-1.5 text-sm text-fd-foreground/50 hover:bg-white/10 hover:text-white transition-all duration-200"
+          className="flex items-center gap-2 bg-fd-muted border border-fd-border rounded-full px-4 py-1.5 text-sm text-fd-muted-foreground hover:bg-fd-accent hover:text-fd-foreground transition-all duration-200"
         >
           <FaMagnifyingGlass className="text-[14px]" />
           <span>Buscar</span>
@@ -382,12 +467,50 @@ export function Navbar() {
         <div className="hidden md:flex items-center gap-3 border-l border-fd-foreground/10 pl-4 ml-2">
           <button 
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            className="text-white/60 hover:text-[#3b82f6] transition-all duration-200"
+            className="text-fd-muted-foreground hover:text-fd-primary transition-all duration-200"
             aria-label="Cambiar tema"
           >
             {mounted && (theme === 'dark' ? <FaSun className="text-[18px]" /> : <FaMoon className="text-[18px]" />)}
             {!mounted && <FaMoon className="text-[18px]" />}
           </button>
+        </div>
+
+        {/* Auth Section */}
+        <div className="flex items-center gap-3 border-l border-fd-foreground/10 pl-4">
+          {session ? (
+            <div className="flex items-center gap-3">
+              <div className="flex flex-col items-end hidden sm:flex">
+                <span className="text-[11px] font-bold text-fd-foreground leading-tight">
+                  {session.user?.name}
+                </span>
+                <span className="text-[9px] text-fd-muted-foreground leading-tight uppercase tracking-tighter mb-1">
+                  {session.user?.email}
+                </span>
+              </div>
+              <button 
+                onClick={() => {
+                  const clientId = 'nextjs-app';
+                  const postLogoutRedirect = window.location.origin;
+                  const issuer = 'http://localhost:8080/realms/ERP%20Docs';
+                  const logoutUrl = `${issuer}/protocol/openid-connect/logout?client_id=${clientId}&post_logout_redirect_uri=${encodeURIComponent(postLogoutRedirect)}`;
+                  
+                  signOut({ callbackUrl: logoutUrl });
+                }}
+                className="group flex items-center justify-center w-9 h-9 bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/20 rounded-full transition-all duration-300"
+                title="Cerrar sesión"
+              >
+                <FaRightFromBracket className="text-[14px] group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => signIn('keycloak')}
+              className="flex items-center gap-2 bg-[#3b82f6]/10 text-[#3b82f6] hover:bg-[#3b82f6]/20 border border-[#3b82f6]/20 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-300"
+            >
+              <FaRightToBracket className="text-[12px]" />
+              <span className="hidden sm:inline">Acceder</span>
+            </button>
+          )}
         </div>
       </div>
       

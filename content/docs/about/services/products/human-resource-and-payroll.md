@@ -1,5 +1,6 @@
 ---
 title: Talento Humano y Nómina
+role: public
 category: Productos
 star: 9
 sticky: 9
@@ -141,12 +142,12 @@ La  Nómina se encuentra integrada directamente al proceso de Análisis de Desem
 - Otros:
   - Constancia de Trabajo
 
-Para referencia de la funcionalidad se tiene un instructivo completo con todos los productos y paquetes [aquí](https://docs.erpya.com/docs/lve/procedures/payroll/procedure-to-process-payroll/)
+Para referencia de la funcionalidad se tiene un instructivo completo con todos los productos y paquetes [aquí](/docs/docs/lve/procedures/payroll/procedure-to-process-payroll/)
 
 ## Alcance del Servicio
 
 - Instalación de la aplicación
-- [Sesión general de capacitación sobre la aplicación incluído en la instalación](../learning/training-session.md)
-- [Sesión de 3 horas de capacitación para el manejo operativo](../learning/training-session.md)
-- [Sesión de 2 horas de capacitación para el manejo administrativo](../learning/training-session.md)
-- [Documentación](https://docs.erpya.com/docs/lve/procedures/payroll/procedure-to-process-payroll/)
+- [Sesión general de capacitación sobre la aplicación incluído en la instalación](/docs/about/services/learning/training-session)
+- [Sesión de 3 horas de capacitación para el manejo operativo](/docs/about/services/learning/training-session)
+- [Sesión de 2 horas de capacitación para el manejo administrativo](/docs/about/services/learning/training-session)
+- [Documentación](/docs/docs/lve/procedures/payroll/procedure-to-process-payroll/)

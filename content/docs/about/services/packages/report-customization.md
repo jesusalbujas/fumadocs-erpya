@@ -1,4 +1,5 @@
 ---
+role: public
 title: Adecuación de Reportes
 category: Paquete de Servicio
 star: 9
@@ -26,7 +27,7 @@ Se requiere añadir al reporte de ventas diarias, la categoría del Socio de Neg
 
 - Reporte con las adecuaciones solicitadas
 - Capacitación sobre el uso del nuevo reporte
-- Un instructivo para futura referencia en la plataforma [ERP Docs Reportes](https://docs.erpya.com/lve/report/index.html) on en la base de datos de [conocimiento](https://stackoverflow.com/c/erpya-customers/questions)
+- Un instructivo para futura referencia en la plataforma [ERP Docs Reportes](/docs/lve/report/index.html) on en la base de datos de [conocimiento](https://stackoverflow.com/c/erpya-customers/questions)
 
 ## Condiciones del Servicio
 

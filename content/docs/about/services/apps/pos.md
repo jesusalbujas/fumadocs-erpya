@@ -1,4 +1,5 @@
 ---
+role: public
 title: Punto de Venta (P.O.S.)
 category: Aplicaciones
 star: 9
@@ -40,6 +41,6 @@ Dedicada a comercios retail con diversas cajas o puntos de venta.
 ## Alcance del Servicio
 
 - Instalación de la aplicación
-- [5 Sesiones de Capacitación a Vendedores](../learning/training-session.md)
-- [3 Sesiones de Capacitación a Supervisores](../learning/training-session.md)
-- [4 Sesiones de Capacitación a Genrentes](../learning/training-session.md)
+- [5 Sesiones de Capacitación a Vendedores](/docs/about/services/learning/training-session)
+- [3 Sesiones de Capacitación a Supervisores](/docs/about/services/learning/training-session)
+- [4 Sesiones de Capacitación a Genrentes](/docs/about/services/learning/training-session)

@@ -1,5 +1,6 @@
 ---
 title: Servicio
+role: public
 category: Verticales
 star: 9
 sticky: 9
@@ -31,13 +32,13 @@ La vertical de servicio enfoca su entregable en las herramientas que permiten ll
 
 ## ¿Qué contiene la vertical?
 
-- [Ventas](../products/quote-to-invoice.md)
-- [Compras](../products/requisition-to-invoice.md)
-- [Gestión Administrativa](../products/business-administration-management.md)
-- [Gestión de Tesorería](../products/open-items-management.md)
-- [Tributos](../products/tributes.md)
+- [Ventas](/docs/about/services/products/quote-to-invoice)
+- [Compras](/docs/about/services/products/requisition-to-invoice)
+- [Gestión Administrativa](/docs/about/services/products/business-administration-management)
+- [Gestión de Tesorería](/docs/about/services/products/open-items-management)
+- [Tributos](/docs/about/services/products/tributes)
 
 ## Productos relacionados
 
-- [Nómina](https://docs.erpya.com/docs/lve/procedures/payroll/)
-- [Contabilidad](../products/performance-analysis.md)
+- [Nómina](/docs/docs/lve/procedures/payroll/)
+- [Contabilidad](/docs/about/services/products/performance-analysis)

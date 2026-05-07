@@ -1,7 +1,8 @@
 {
   "title": "Nosotros",
+  "role": "public",
   "pages": [
-    "index",
+    "index",  
     "news",
     "services",
     "advanced-functional-support-scheme",

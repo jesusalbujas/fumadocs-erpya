@@ -1,5 +1,6 @@
 ---
 title: Alcance General del Soporte Funcional Avanzado
+role: public
 category: Nosotros
 star: 9
 sticky: 9
@@ -10,7 +11,7 @@ tag:
 article: false
 ---
 
-[Consultoría de Procesos](https://docs.erpya.com/about/services/services/process-consulting.html) **(Hasta 10 horas mensuales) incluye:**
+[Consultoría de Procesos](/docs/about/services/services/process-consulting.html) **(Hasta 10 horas mensuales) incluye:**
 
 ### Pruebas y Aseguramiento de la Calidad
 
