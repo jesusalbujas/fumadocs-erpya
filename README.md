@@ -156,19 +156,41 @@ KEYCLOAK_ISSUER=http://localhost:8080/realms/Prueba
     ---
     ```
 
+---
+
+## 🛠️ Automatización de Roles (Keycloak)
+
+Para evitar tener que crear manualmente cada rol en Keycloak, el proyecto incluye un script de gestión automatizada.
+
+### ¿Qué hace el script?
+1.  **Sincronización**: Escanea tus carpetas en `content/docs` y crea los roles necesarios (ej: `docs:mi-seccion`) si no existen.
+2.  **Limpieza**: Elimina roles obsoletos o de archivos individuales (para mantener el Token JWT ligero y eficiente).
+
+### Cómo usarlo
+Asegúrate de tener el entorno de desarrollo o los contenedores encendidos y ejecuta:
+
+```bash
+node scripts/manage-roles.mjs
+```
+
+> [!IMPORTANT]
+> El script utiliza las credenciales definidas en tu `.env.local`. Por defecto, solo crea roles para **carpetas**. Los archivos dentro de esas carpetas heredan automáticamente el permiso, lo que optimiza el rendimiento de Keycloak.
+
+---
+
 ## 🐳 Despliegue con Docker
 
 El proyecto está preparado para ser ejecutado en contenedores usando el modo `standalone` de Next.js.
 
 ### 1. Construir la imagen manualmente
 ```bash
-docker build -t fumadocs-erpya .
+docker build -t fumadocs-erpya -f docker/Dockerfile .
 ```
 
 ### 2. Ejecutar con Docker Compose (Recomendado)
 Asegúrate de tener tu archivo `.env.local` configurado y luego ejecuta:
 ```bash
-docker compose up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ### 3. Ejecutar con Docker Run (Pasando variables por comando)
@@ -193,10 +215,10 @@ El sitio estará disponible en `http://localhost:3001`.
 Por defecto, los ejemplos anteriores de Keycloak usan una base de datos interna volátil (H2). **Para producción, es obligatorio usar PostgreSQL** para no perder usuarios ni roles.
 
 ### Uso de la plantilla completa
-He preparado un archivo `docker-compose.full.yml` que levanta todo el stack (App + Keycloak + Postgres) con persistencia:
+He preparado el archivo `docker/docker-compose.yml` que levanta todo el stack (App + Keycloak + Postgres) con persistencia:
 
 ```bash
-docker compose -f docker-compose.full.yml up -d
+docker compose -f docker/docker-compose.yml up -d
 ```
 
 ### Configuración manual de Keycloak con Postgres
@@ -208,7 +230,7 @@ Si ya tienes un Postgres y quieres conectar Keycloak, debes pasar estas variable
 *   **`KC_DB_PASSWORD`**: La contraseña de tu BD.
 
 > [!TIP]
-> En el archivo `docker-compose.full.yml`, verás que usamos un **Volume** de Docker (`postgres_data`) para la base de datos. **Keycloak no necesita un volumen propio para los datos** ya que guarda todo (usuarios, roles, configuraciones) dentro de PostgreSQL. Solo necesitarías volúmenes en Keycloak si planeas usar temas personalizados (`/opt/keycloak/themes`) o plugins externos (`/opt/keycloak/providers`).
+> En el archivo `docker/docker-compose.yml`, verás que usamos un **Volume** de Docker (`postgres_data`) para la base de datos. Además, hemos incluido archivos de respaldo (`keycloak_backup.sql` y `realm-export.json`) que se importan automáticamente la primera vez que levantas el entorno. Esto asegura que los roles (`admin`, `docs:*`) y clientes ya estén preconfigurados.
 
 ---
 
