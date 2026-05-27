@@ -1,12 +1,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { BloggerInfo } from '@/components/BloggerInfo';
-import { TechStackOrbit } from '@/components/TechStackOrbit';
+import { CommandCenterDiagram } from '@/components/CommandCenterDiagram';
 import { source } from '@/lib/source';
 import { FaCalendarAlt, FaArrowRight, FaRocket, FaCode, FaDiscord } from 'react-icons/fa';
 import { FaArrowUpRightFromSquare } from 'react-icons/fa6';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { getAllGitCreationDates } from '@/lib/git';
 
 const projects = [
   {
@@ -46,13 +47,16 @@ export default async function HomePage() {
   const userRoles = (session?.user as any)?.roles || [];
 
   const allPages = source.getPages();
+  const gitCreationDates = getAllGitCreationDates();
   const dynamicArticles = allPages
     .filter(page => !page.url.endsWith('index'))
     // Ordenar por fecha (descendente: más reciente primero)
     .sort((a, b) => {
-      const dateA = new Date((a.data as any).date || 0).getTime();
-      const dateB = new Date((b.data as any).date || 0).getTime();
-      return dateB - dateA;
+      const aPath = `content/docs/${(a as any).path}`;
+      const bPath = `content/docs/${(b as any).path}`;
+      const aDate = gitCreationDates.get(aPath) || (a.data as any).date;
+      const bDate = gitCreationDates.get(bPath) || (b.data as any).date;
+      return new Date(bDate || 0).getTime() - new Date(aDate || 0).getTime();
     })
     .slice(0, 6);
 
@@ -223,10 +227,38 @@ export default async function HomePage() {
   const validPages = allPages.filter(page => !page.url.endsWith('index'));
 
   const sortedPages = [...validPages].sort((a, b) => {
-    const dateA = new Date((a.data as any).date || 0).getTime();
-    const dateB = new Date((b.data as any).date || 0).getTime();
-    return dateB - dateA;
+    const aPath = `content/docs/${(a as any).path}`;
+    const bPath = `content/docs/${(b as any).path}`;
+    const aDate = gitCreationDates.get(aPath) || (a.data as any).date;
+    const bDate = gitCreationDates.get(bPath) || (b.data as any).date;
+    const diff = new Date(bDate || 0).getTime() - new Date(aDate || 0).getTime();
+    if (diff !== 0) return diff;
+    return a.url.localeCompare(b.url);
   });
+
+  const pageCategory = (url: string) => url.split('/').filter(Boolean)[1] || '';
+
+  function pickDiverse(pages: typeof sortedPages, max: number) {
+    const seen = new Set<string>();
+    const result: typeof sortedPages = [];
+    for (const p of pages) {
+      const cat = pageCategory(p.url);
+      if (seen.has(cat)) continue;
+      seen.add(cat);
+      result.push(p);
+      if (result.length >= max) break;
+    }
+    // fill remaining slots if not enough categories
+    if (result.length < max) {
+      for (const p of pages) {
+        if (!result.includes(p)) {
+          result.push(p);
+          if (result.length >= max) break;
+        }
+      }
+    }
+    return result;
+  }
 
   const privateAccessiblePages = sortedPages.filter(page => {
     const explicitRole = (page.data as any).role;
@@ -239,10 +271,10 @@ export default async function HomePage() {
     return !explicitRole || explicitRole === 'public';
   });
 
-  // Tomar los 4 documentos prioritarios finales
+  const privateCount = Math.min(4, privateAccessiblePages.length);
   const finalDocs = [
-    ...privateAccessiblePages.slice(0, 4),
-    ...publicPages.slice(0, 4 - Math.min(4, privateAccessiblePages.length))
+    ...pickDiverse(privateAccessiblePages, privateCount),
+    ...pickDiverse(publicPages, 4 - privateCount)
   ].slice(0, 4);
 
   // Cargar las descripciones de los documentos de forma asíncrona y paralela
@@ -258,6 +290,10 @@ export default async function HomePage() {
           const cleanText = rawText
             .replace(/^#+ .*/gm, '') // eliminar títulos h1, h2, h3
             .replace(/```[\s\S]*?```/g, '') // eliminar bloques de código completo
+            .replace(/<[^>]*>?/gm, '') // eliminar etiquetas HTML completas
+            .replace(/!\[.*?\]\(.*?\)/g, '') // eliminar imágenes markdown completas
+            .replace(/\[([^\]]+)\]\(.*?\)/g, '$1') // quitar enlaces markdown pero dejar el texto
+            .replace(/[*_]{1,2}(.*?)[*_]{1,2}/g, '$1') // eliminar negritas/cursivas pero dejar texto
             .replace(/[\r\n]+/g, ' ') // convertir saltos de línea a espacios sencillos
             .replace(/\s+/g, ' ') // colapsar múltiples espacios contiguos
             .trim();
@@ -289,95 +325,50 @@ export default async function HomePage() {
   );
 
   return (
-    <main 
-      className="flex flex-col min-h-screen bg-[#020716] text-zinc-100 font-sans relative overflow-hidden mt-[-60px]"
-      style={{
-        backgroundImage: `
-          radial-gradient(circle at 50% -20%, rgba(29, 78, 216, 0.38), transparent 60%),
-          radial-gradient(circle at 80% 40%, rgba(30, 64, 175, 0.22), transparent 50%),
-          radial-gradient(circle at 10% 70%, rgba(30, 58, 138, 0.15), transparent 45%)
-        `
-      }}
-    >
-      {/* Background Linear Mesh Grid */}
-      <div 
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, rgba(255, 255, 255, 0.04) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.04) 1px, transparent 1px)
-          `,
-          backgroundSize: '48px 48px',
-          maskImage: 'radial-gradient(circle at 50% 50%, white 20%, transparent 80%)',
-          WebkitMaskImage: 'radial-gradient(circle at 50% 50%, white 20%, transparent 80%)',
-          opacity: 0.85
-        }}
-      />
+    <main className="flex flex-col min-h-screen bg-surface text-on-surface font-body-base relative overflow-hidden mt-[-60px]">
+      <div className="scanline"></div>
+      <div className="absolute inset-0 pointer-events-none grid-bg opacity-85" />
+      
+      {/* Ambient Light Accents */}
+      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary-container/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-secondary-container/10 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
 
       {/* Hero Section */}
-      <section className="relative w-full px-6 pt-28 pb-16 sm:px-8 lg:pt-36 lg:pb-24 max-w-7xl mx-auto z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_460px] gap-12 lg:gap-16 items-center">
+      <section className="relative w-full max-w-[1440px] mx-auto px-6 sm:px-8 md:px-12 min-h-screen pt-[80px] pb-12 z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        
+        {/* Left Content: Hero Text */}
+        <div className="lg:col-span-5 space-y-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 glass-panel border border-primary/30 rounded-full">
+            <span className="w-2 h-2 rounded-full bg-primary-container node-pulse"></span>
+            <span className="font-micro-label text-[10px] font-bold tracking-[0.08em] text-primary-container uppercase">Venezuela · Latinoamérica</span>
+          </div>
           
-          {/* Left Hero Column */}
-          <div className="max-w-2xl">
-            {/* Country/Region Badge */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-md border border-white/[0.15] bg-white/[0.06] px-3.5 py-1.5 text-xs font-semibold text-white/[0.88] shadow-[0_14px_38px_rgba(0,0,0,0.14)] backdrop-blur-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#1AAAD4] animate-pulse" />
-              Venezuela · Latinoamérica
-            </div>
-
-            {/* Glowing Big Headline */}
-            <h1 className="mb-6 text-[clamp(32px,5.5vw,60px)] font-extrabold leading-[1.04] tracking-tight text-white">
-              Tecnología empresarial. <br />
-              <span className="bg-gradient-to-r from-[#1AAAD4] to-[#5BC8E5] bg-clip-text text-transparent">
-                Implementada por expertos.
-              </span>
+          <div className="space-y-4">
+            <h1 className="font-display-lg text-[clamp(32px,5.5vw,48px)] font-bold leading-[1.1] tracking-[-0.04em] text-on-background">
+              Conocimiento <br/>
+              <span className="text-primary-container">centralizado.</span><br/>
+              Documentación oficial.
             </h1>
-
-            {/* Subtext description */}
-            <p className="mb-8 text-base sm:text-lg leading-relaxed text-zinc-300 max-w-xl">
-              ERP, CRM, BI e Infraestructura — implementados por expertos con más de 15 años de experiencia en Venezuela y Latinoamérica.
+            <p className="font-body-base text-[15px] leading-[1.5] text-on-surface-variant max-w-lg">
+              Guías técnicas, referencias y mejores prácticas para ADempiere, . Toda la información necesaria para dominar y escalar tus soluciones empresariales.
             </p>
-
-            {/* CTAs */}
-            <div className="mb-10 flex flex-wrap gap-4">
-              <a 
-                href="/docs" 
-                className="inline-flex items-center gap-2 rounded-lg bg-[#1AAAD4] px-6 py-3 text-sm font-extrabold text-[#0D2167] shadow-[0_0_20px_rgba(26,170,212,0.3)] transition-all duration-300 hover:bg-[#24c0eb] hover:shadow-[0_0_30px_rgba(26,170,212,0.55)] hover:-translate-y-0.5"
-              >
-                Ver Documentación
-                <FaArrowRight className="text-xs" />
-              </a>
-              <Link 
-                href="/docs/about" 
-                className="inline-flex items-center gap-2 rounded-lg border border-white/[0.2] px-5 py-3 text-sm font-semibold text-white/[0.88] transition-all duration-300 hover:bg-white/[0.08] hover:-translate-y-0.5"
-              >
-                Conócenos
-              </Link>
-            </div>
-
-            {/* Features checkmarks list */}
-            <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-zinc-400">
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-[#1AAAD4]/15 text-[#1AAAD4] flex items-center justify-center text-[10px] font-bold">✓</span>
-                Implementación ERP
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-[#1AAAD4]/15 text-[#1AAAD4] flex items-center justify-center text-[10px] font-bold">✓</span>
-                BI y analítica
-              </span>
-              <span className="flex items-center gap-2">
-                <span className="w-4 h-4 rounded-full bg-[#1AAAD4]/15 text-[#1AAAD4] flex items-center justify-center text-[10px] font-bold">✓</span>
-                Infraestructura cloud
-              </span>
-            </div>
           </div>
-
-          {/* Right Hero Column: Technical Orbit stack */}
-          <div className="w-full flex items-center justify-center">
-            <TechStackOrbit />
+          
+          <div className="flex flex-wrap gap-4 pt-4">
+            <a href="/docs" className="px-8 py-4 bg-primary-container text-[#0D2167] font-bold rounded-lg flex items-center gap-2 hover:shadow-[0_0_20px_rgba(26,170,212,0.4)] transition-all">
+              Ver Documentación
+              <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+            </a>
+            <Link href="/docs/about" className="px-8 py-4 glass-panel text-on-surface border border-white/20 font-bold rounded-lg hover:bg-white/5 transition-all">
+              Conócenos
+            </Link>
           </div>
+          
+        </div>
 
+        {/* Right Content: The Visual Diagram (Command Center HUD) */}
+        <div className="lg:col-span-7">
+          <CommandCenterDiagram />
         </div>
       </section>
 
@@ -756,7 +747,6 @@ export default async function HomePage() {
           <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.513 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-4.846c1.62.962 3.21 1.464 4.887 1.465 5.45-.001 9.887-4.441 9.889-9.896.002-2.64-1.022-5.12-2.887-6.988C16.671 1.865 14.187 1.84 12.01 1.84c-5.452 0-9.89 4.44-9.892 9.896-.001 1.815.48 3.59 1.39 5.158l-1.002 3.66 3.789-.994zM16.52 14.7c-.244-.122-1.442-.712-1.666-.794-.223-.081-.385-.122-.547.122-.162.244-.629.794-.771.957-.142.163-.284.183-.528.061-.244-.122-1.03-.38-1.962-1.213-.725-.647-1.215-1.447-1.357-1.691-.142-.244-.015-.376.107-.497.11-.11.244-.285.365-.427.122-.142.162-.244.244-.407.081-.163.041-.305-.02-.427-.061-.122-.547-1.32-.75-1.812-.197-.475-.397-.41-.547-.417-.14-.007-.305-.007-.468-.007a.9.9 0 00-.65.305c-.223.244-.853.834-.853 2.034s.874 2.36 1.037 2.583c.163.224 1.72 2.625 4.168 3.682.582.252 1.036.402 1.39.515.585.186 1.117.16 1.537.098.467-.069 1.442-.59 1.646-1.16.204-.57.204-1.058.142-1.16-.062-.102-.224-.163-.468-.285z" />
         </svg>
       </a>
-
     </main>
   );
 }
